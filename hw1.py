@@ -24,7 +24,7 @@ class Puzzle:
         if self.width % 2 != 0 and self.count_inversions() % 2 != 0:
             return False
         return True
-            
+    
     def count_inversions(self):
         state = self.state_flat
         count = 0
@@ -64,7 +64,13 @@ class Puzzle:
             col += 1
         self.blank_ix = (row, col)
         self.state_flat = flatten(self.state)
-
+    
+    def is_goal_state(self):
+        state = self.state_flat
+        for i in range(self.width**2 - 1):
+            if state[i+1] != 0 and state[i] > state[i+1]:
+                return False
+        return True
 
 
 def reshape(array, width):
@@ -82,14 +88,14 @@ def swap_elements(array_2d, ix1, ix2):
 
 
 def main():
-    with open('puzzle1.csv', 'r') as f:
-        puzzle_input = f.readline()
-    puzzle_input = list(map(int, puzzle_input[:-1].split(',')))
+    # with open('puzzle1.csv', 'r') as f:
+    #     puzzle_input = f.readline()
+    # puzzle_input = list(map(int, puzzle_input[:-1].split(',')))
+    puzzle_input = [0, 1, 2, 3, 4, 5, 6, 7, 8]
     puzzle = Puzzle(puzzle_input)
     print(puzzle)
     print(puzzle.possible_moves())
-    puzzle.move_blank('U')
-    print(puzzle)
+    print(puzzle.is_goal_state())
 
 
 if __name__ == '__main__':
