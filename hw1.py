@@ -1,13 +1,45 @@
 import copy
-import heapq
+from heapq import heappop, heappush
 from itertools import chain
 import math
 
 
+class Solver:
+    def __init__(self, start_state):
+        self.start_state = start_state
+        self.frontier = []
+        self.expanded = set()
+        self.num_visited = 0
+    
+    def solve(self):
+        root = Node(self.start_state, None, 0, [])
+        if not root.state.is_solvable():
+            return None
+        self.num_visited += 1
+        heappush(self.frontier, (root.depth, self.num_visited, root))
+        while self.frontier:
+            cur_node = heappop(self.frontier)[-1]
+            if cur_node.state.is_goal_state():
+                return cur_node
+            cur_position = tuple(cur_node.state.position_flat)
+            if cur_position not in self.expanded:
+                self.expanded.add(cur_position)
+                for direction in cur_node.state.possible_moves():
+                    new_node = copy.deepcopy(cur_node)
+                    new_node.state.move_blank(direction)
+                    if tuple(new_node.state.position_flat) not in self.expanded:
+                        self.num_visited += 1
+                        new_node.parent = cur_node
+                        new_node.depth += 1
+                        new_node.path.append(direction)
+                        heappush(self.frontier, (new_node.depth, self.num_visited, new_node))
+
+
 class Node:
-    def __init__(self, state, parent, path):
+    def __init__(self, state, parent, depth, path):
         self.state = self.Puzzle(state)
         self.parent = parent
+        self.depth = depth
         self.path = path
     
     class Puzzle:
@@ -72,9 +104,23 @@ class Node:
                 col += 1
             self.blank_ix = (row, col)
             self.position_flat = flatten(self.position)
+        
+        def move_sequence(self, sequence, verbose=False):
+            if verbose:
+                print(self)
+            for move in sequence:
+                self.move_blank(move)
+                if verbose:
+                    print('\n' + move + '\n')
+                    print(self)
+            if not verbose:
+                print(self)
+            print('\n' + str(self.is_goal_state()))
 
         def is_goal_state(self):
             state = self.position_flat
+            if state[0] != 0 and state[-1] != 0:
+                return False
             for i in range(self.width**2 - 1):
                 if state[i+1] != 0 and state[i] > state[i+1]:
                     return False
@@ -96,13 +142,18 @@ def swap_elements(array_2d, ix1, ix2):
 
 
 def main():
-    with open('puzzle1.csv', 'r') as f:
+    with open('test.csv', 'r') as f:
         raw_puzzle = f.readline()
     start_state = list(map(int, raw_puzzle[:-1].split(',')))
-    root = Node(start_state, None, [])
-    print(root.state)
-    print(root.state.possible_moves())
-    print(root.state.is_goal_state())
+    solver = Solver(start_state)
+    solution = solver.solve()
+    if solution is None:
+        print('Unsolvable')
+    else:
+        print(solution.path)
+    # move_sequence = ['U', 'L', 'U', 'R', 'D', 'L', 'D', 'R', 'U', 'R', 'D', 'L', 'L', 'U', 'R']
+    puzzle = Node.Puzzle(start_state)
+    puzzle.move_sequence(solution.path, True)
 
 
 if __name__ == '__main__':
