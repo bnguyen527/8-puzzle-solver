@@ -2,6 +2,8 @@ import copy
 from heapq import heappop, heappush
 from itertools import chain
 import math
+import random
+import sys
 
 
 class Solver:
@@ -88,12 +90,14 @@ class Solution():
         solution_str = []
         solution_str.append('\nStart state:')
         solution_str.append('\n{}\n'.format(self.start_state))
+        solution_str.append('Width: n = {}'.format(self.start_state.width))
         solution_str.append('Heuristic: {}'.format(self.heuristic.__name__))
         solution_str.append('Number of expanded nodes: {}'.format(self.num_expanded))
         solution_str.append('Solution state:')
         solution_str.append('\n{}\n'.format(self.sol_state))
+        solution_str.append('Solution path depth: {}'.format(len(self.sol_path)))
         solution_str.append('Solution path:')
-        solution_str.append(str(self.sol_path))
+        solution_str.append(','.join(self.sol_path))
         return '\n'.join(solution_str)
 
 
@@ -104,7 +108,7 @@ class Node:
         self.depth = depth
         self.path = path
 
-class Puzzle:
+class Puzzle:    
     def __init__(self, position):
         self.position_flat = position
         self.width = int(math.sqrt(len(position)))
@@ -188,6 +192,12 @@ class Puzzle:
                 return False
         return True
 
+    @staticmethod
+    def generate(width):
+        tiles = list(range(width**2))
+        random.shuffle(tiles)
+        return Puzzle(tiles)
+
 
 def reshape(array, width):
     return [array[i:i+width] for i in range(0, width**2, width)]
@@ -216,11 +226,25 @@ def manhattan_distance(point_1, point_2):
 
 
 def main():
-    with open('test.csv', 'r') as f:
+    if len(sys.argv) < 2:
+        err_msg = '\n'.join(['Missing argument! Please provide input file.', 'Syntax: python hw1.py input_file [heuristic]'])
+        sys.exit(err_msg)
+    if len(sys.argv) < 3 or sys.argv[2] == 'manhattan':
+        heuristic = Solver.manhattan
+    elif sys.argv[2] == 'ucs':
+        heuristic = Solver.uniform_cost
+    elif sys.argv[2] == 'tiles':
+        heuristic = Solver.tiles
+    else:
+        err_msg = "Invalid heuristic! Please select either 'ucs', 'tiles, or 'manhattan'."
+        sys.exit(err_msg)
+    input_file = sys.argv[1]
+    with open(input_file, 'r') as f:
         raw_puzzle = f.readline()
     start_state = Puzzle(list(map(int, raw_puzzle[:-1].split(','))))
+    # print('Width: n = {}'.format(start_state.width))
     solver = Solver(start_state)
-    solution = solver.solve(Solver.manhattan)
+    solution = solver.solve(heuristic)
     if solution is None:
         print('Unsolvable')
     else:
