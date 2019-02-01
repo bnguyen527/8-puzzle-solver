@@ -1,76 +1,84 @@
+import copy
+import heapq
 from itertools import chain
 import math
 
 
-class Puzzle:
-    def __init__(self, puzzle):
-        self.state_flat = puzzle
-        self.width = int(math.sqrt(len(puzzle)))
-        self.state = reshape(puzzle, self.width)
-        self.blank_ix = self.find(0)
+class Node:
+    def __init__(self, state, parent, path):
+        self.state = self.Puzzle(state)
+        self.parent = parent
+        self.path = path
     
-    def __str__(self):
-        return ('\n'.join([' '.join(list(map(str, row))) for row in self.state])).replace('0', ' ')
+    class Puzzle:
+        def __init__(self, position):
+            self.position_flat = position
+            self.width = int(math.sqrt(len(position)))
+            self.position = reshape(position, self.width)
+            self.blank_ix = self.find(0)
 
-    def find(self, tile):
-        for i in range(self.width):
-            try:
-                j = self.state[i].index(tile)
-                return i, j
-            except ValueError:
-                continue
-    
-    def is_solvable(self):
-        if self.width % 2 != 0 and self.count_inversions() % 2 != 0:
-            return False
-        return True
-    
-    def count_inversions(self):
-        state = self.state_flat
-        count = 0
-        for i in range(self.width**2):
-            if state[i] != 0:
-                for j in range(i+1, self.width**2):
-                    if state[j] != 0 and state[i] > state[j]:
-                        count += 1
-        return count
-    
-    def possible_moves(self):
-        moves = []
-        row, col = self.blank_ix
-        if row > 0:
-            moves.append('U')
-        if row < self.width - 1:
-            moves.append('D')
-        if col > 0:
-            moves.append('L')
-        if col < self.width - 1:
-            moves.append('R')
-        return moves
-    
-    def move_blank(self, direction):
-        row, col = self.blank_ix
-        if direction == 'U':
-            swap_elements(self.state, self.blank_ix, (row-1, col))
-            row -= 1
-        elif direction == 'D':
-            swap_elements(self.state, self.blank_ix, (row+1, col))
-            row += 1
-        elif direction == 'L':
-            swap_elements(self.state, self.blank_ix, (row, col-1))
-            col -= 1
-        else:
-            swap_elements(self.state, self.blank_ix, (row, col+1))
-            col += 1
-        self.blank_ix = (row, col)
-        self.state_flat = flatten(self.state)
-    
-    def is_goal_state(self):
-        state = self.state_flat
-        for i in range(self.width**2 - 1):
-            if state[i+1] != 0 and state[i] > state[i+1]:
+        def __str__(self):
+            return ('\n'.join([' '.join(list(map(str, row))) for row in self.position])).replace('0', ' ')
+
+        def find(self, tile):
+            for i in range(self.width):
+                try:
+                    j = self.position[i].index(tile)
+                    return i, j
+                except ValueError:
+                    continue
+
+        def is_solvable(self):
+            if self.width % 2 != 0 and self.count_inversions() % 2 != 0:
                 return False
-        return True
+            return True
+
+        def count_inversions(self):
+            position = self.position_flat
+            count = 0
+            for i in range(self.width**2):
+                if position[i] != 0:
+                    for j in range(i+1, self.width**2):
+                        if position[j] != 0 and position[i] > position[j]:
+                            count += 1
+            return count
+
+        def possible_moves(self):
+            moves = []
+            row, col = self.blank_ix
+            if row > 0:
+                moves.append('U')
+            if row < self.width - 1:
+                moves.append('D')
+            if col > 0:
+                moves.append('L')
+            if col < self.width - 1:
+                moves.append('R')
+            return moves
+
+        def move_blank(self, direction):
+            row, col = self.blank_ix
+            if direction == 'U':
+                swap_elements(self.position, self.blank_ix, (row-1, col))
+                row -= 1
+            elif direction == 'D':
+                swap_elements(self.position, self.blank_ix, (row+1, col))
+                row += 1
+            elif direction == 'L':
+                swap_elements(self.position, self.blank_ix, (row, col-1))
+                col -= 1
+            else:
+                swap_elements(self.position, self.blank_ix, (row, col+1))
+                col += 1
+            self.blank_ix = (row, col)
+            self.position_flat = flatten(self.position)
+
+        def is_goal_state(self):
+            state = self.position_flat
+            for i in range(self.width**2 - 1):
+                if state[i+1] != 0 and state[i] > state[i+1]:
+                    return False
+            return True
 
 
 def reshape(array, width):
@@ -88,14 +96,13 @@ def swap_elements(array_2d, ix1, ix2):
 
 
 def main():
-    # with open('puzzle1.csv', 'r') as f:
-    #     puzzle_input = f.readline()
-    # puzzle_input = list(map(int, puzzle_input[:-1].split(',')))
-    puzzle_input = [0, 1, 2, 3, 4, 5, 6, 7, 8]
-    puzzle = Puzzle(puzzle_input)
-    print(puzzle)
-    print(puzzle.possible_moves())
-    print(puzzle.is_goal_state())
+    with open('puzzle1.csv', 'r') as f:
+        raw_puzzle = f.readline()
+    start_state = list(map(int, raw_puzzle[:-1].split(',')))
+    root = Node(start_state, None, [])
+    print(root.state)
+    print(root.state.possible_moves())
+    print(root.state.is_goal_state())
 
 
 if __name__ == '__main__':
