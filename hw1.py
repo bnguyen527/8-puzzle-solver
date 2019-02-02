@@ -181,7 +181,7 @@ class Puzzle:
 
     def __str__(self):
         # Return pretty 2D representation of the puzzle
-        return '\n'.join([' '.join(list(map(str, row))) for row in self.position]).replace('0', ' ')
+        return '\n'.join([' '.join(list(map('{:2}'.format, row))) for row in self.position]).replace('0', ' ')
 
     # Find coordinates of blank tile in 2D representation of the puzzle.
     def find(self, tile):
