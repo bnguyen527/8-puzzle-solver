@@ -33,7 +33,7 @@ class Solver:
 
     # Solve the puzzle given by the start state using the heuristic provided.
     def solve(self, heuristic):
-        root = Node(self.start_state, None, 0, [])
+        root = Node(self.start_state, [])
         if not root.state.is_solvable():    # Unsolvable.
             return None
         # Goal states only needed for heuristics.
@@ -42,7 +42,7 @@ class Solver:
             Solver.goal_state_1 = [0] + tiles
             Solver.goal_state_2 = tiles + [0]
         self.num_visited += 1
-        heappush(self.frontier, (root.depth +
+        heappush(self.frontier, (root.depth() +
                                  heuristic(root), self.num_visited, root))
         while self.frontier:
             cur_node = heappop(self.frontier)[-1]
@@ -60,10 +60,8 @@ class Solver:
                     # Only visit nodes not expanded yet.
                     if tuple(new_node.state.position_flat) not in self.expanded:
                         self.num_visited += 1
-                        new_node.parent = cur_node  # Add into the search tree.
-                        new_node.depth += 1
                         new_node.path.append(direction)
-                        heappush(self.frontier, (new_node.depth +
+                        heappush(self.frontier, (new_node.depth() +
                                                  heuristic(new_node), self.num_visited, new_node))
 
     # Return a Solution object populated with information about the solution.
@@ -152,17 +150,17 @@ class Node:
 
     Args:
         state (Puzzle): State of the position.
-        parent (Node): Parent node.
-        depth (int): Depth of node in search tree.
         path (list): List of movements of blank tiles to reach this state.
 
     """
 
-    def __init__(self, state, parent, depth, path):
+    def __init__(self, state, path):
         self.state = state
-        self.parent = parent
-        self.depth = depth
         self.path = path
+
+    # Return depth of node.
+    def depth(self):
+        return len(self.path)
 
 
 class Puzzle:
@@ -325,7 +323,8 @@ def solve_n_times(width, heuristics, num_instances):
         num_expanded_dict[heuristic.__name__] = []
     for i in range(num_instances):
         print('Instance {}...'.format(i))
-        start_state = Puzzle.generate(width, True)  # Generate a solvable 8-puzzle.
+        # Generate a solvable 8-puzzle.
+        start_state = Puzzle.generate(width, True)
         solution = None
         for heuristic in heuristics:
             print('Heuristic: {}'.format(heuristic.__name__))
@@ -354,12 +353,14 @@ def plot_num_expanded_dict(sol_depths, num_expanded_dict):
 
 # Test the limits of specified heuristic at width. Return solution and solving time.
 def test_limits(heuristic, width):
-    start_state = Puzzle.generate(width, True)  # Generate a solvable puzzle of specified width.
+    # Generate a solvable puzzle of specified width.
+    start_state = Puzzle.generate(width, True)
     solver = Solver(start_state)
     start = time.time()
     solution = solver.solve(heuristic)
     solve_time = time.time() - start
     return solution, solve_time
+
 
 def main():
     if len(sys.argv) < 2:
@@ -369,7 +370,7 @@ def main():
     if sys.argv[1] == '-t':
         if len(sys.argv) < 4:
             err_msg = '\n'.join(['Missing arguments! Please enter heuristic and/or puzzle width.',
-                'Syntax: python hw1.py -t heuristic width'])
+                                 'Syntax: python hw1.py -t heuristic width'])
             sys.exit(err_msg)
         if sys.argv[2] == 'ucs':
             heuristic = Solver.uniform_cost
@@ -381,7 +382,8 @@ def main():
             err_msg = "Invalid heuristic! Please select either 'ucs', 'tiles, or 'manhattan'."
             sys.exit(err_msg)
         width = int(sys.argv[3])
-        print('Testing the limits of {} heuristic at width {}...'.format(heuristic.__name__, width))
+        print('Testing the limits of {} heuristic at width {}...'.format(
+            heuristic.__name__, width))
         solution, solve_time = test_limits(heuristic, width)
         print(solution)
         print('\nSolving time: {} min'.format(solve_time / 60))
