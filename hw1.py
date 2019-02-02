@@ -5,6 +5,7 @@ import math
 import pickle
 import random
 import sys
+import time
 
 import matplotlib.pyplot as plt
 
@@ -269,12 +270,17 @@ class Puzzle:
                 return False
         return True
 
-    # Generate a random Puzzle of the specified width.
+    # Generate a random Puzzle of the specified width. Check for solvability if specified.
     @staticmethod
-    def generate(width):
+    def generate(width, solvability_check=False):
         tiles = list(range(width**2))   # Possible tiles.
         random.shuffle(tiles)
-        return Puzzle(tiles)
+        puzzle = Puzzle(tiles)
+        if solvability_check:
+            while not puzzle.is_solvable():
+                random.shuffle(tiles)
+                puzzle = Puzzle(tiles)
+        return puzzle
 
 
 # Return 2D representation of the puzzle given the flat array and width.
@@ -317,20 +323,17 @@ def solve_n_times(width, heuristics, num_instances):
     # Initializing the dictionary for each heuristic.
     for heuristic in heuristics:
         num_expanded_dict[heuristic.__name__] = []
-    while num_instances > 0:
-        print('Number of instances left: {}'.format(num_instances))
-        start_state = Puzzle.generate(3)
-        if start_state.is_solvable():   # Ignore unsolvable puzzles.
-            solution = None
-            for heuristic in heuristics:
-                print('Heuristic: {}'.format(heuristic.__name__))
-                solver = Solver(start_state)
-                solution = solver.solve(heuristic)
-                num_expanded_dict[heuristic.__name__].append(
-                    solution.num_expanded)
-            # Same depth for all heuristics due to optimality.
-            sol_depths.append(len(solution.sol_path))
-            num_instances -= 1
+    for i in range(num_instances):
+        print('Instance {}...'.format(i))
+        start_state = Puzzle.generate(3, True)  # Generate a solvable 8-puzzle.
+        solution = None
+        for heuristic in heuristics:
+            print('Heuristic: {}'.format(heuristic.__name__))
+            solver = Solver(start_state)
+            solution = solver.solve(heuristic)
+            num_expanded_dict[heuristic.__name__].append(solution.num_expanded)
+        # Same depth for all heuristics due to optimality.
+        sol_depths.append(len(solution.sol_path))
     return sol_depths, num_expanded_dict
 
 
@@ -349,12 +352,41 @@ def plot_num_expanded_dict(sol_depths, num_expanded_dict):
     plt.show()
 
 
+# Test the limits of specified heuristic at width. Return solution and solving time.
+def test_limits(heuristic, width):
+    start_state = Puzzle.generate(width, True)  # Generate a solvable puzzle of specified width.
+    solver = Solver(start_state)
+    start = time.time()
+    solution = solver.solve(heuristic)
+    solve_time = time.time() - start
+    return solution, solve_time
+
 def main():
     if len(sys.argv) < 2:
         err_msg = 'Missing argument! Syntax: python hw1.py input_file [heuristic] or python hw1.py -r [num_instances]'
         sys.exit(err_msg)
+    # Test the limits of specified heuristic.
+    if sys.argv[1] == '-t':
+        if len(sys.argv) < 4:
+            err_msg = '\n'.join(['Missing arguments! Please enter heuristic and/or puzzle width.',
+                'Syntax: python hw1.py -t heuristic width'])
+            sys.exit(err_msg)
+        if sys.argv[2] == 'ucs':
+            heuristic = Solver.uniform_cost
+        elif sys.argv[2] == 'tiles':
+            heuristic = Solver.tiles
+        elif sys.argv[2] == 'manhattan':
+            heuristic = Solver.manhattan
+        else:
+            err_msg = "Invalid heuristic! Please select either 'ucs', 'tiles, or 'manhattan'."
+            sys.exit(err_msg)
+        width = int(sys.argv[3])
+        print('Testing the limits of {} heuristic at width {}...'.format(heuristic.__name__, width))
+        solution, solve_time = test_limits(heuristic, width)
+        print('Solution path depth: {}'.format(len(solution.sol_path)))
+        print('Solving time: {} min'.format(solve_time / 60))
     # Mass solving of random puzzles.
-    if sys.argv[1] == '-r' and len(sys.argv) == 3:
+    elif sys.argv[1] == '-r' and len(sys.argv) == 3:
         num_instances = int(sys.argv[2])
         print('Solving randomly generated {} 8-puzzles and plotting results...'.format(num_instances))
         heuristics = [Solver.uniform_cost, Solver.tiles, Solver.manhattan]

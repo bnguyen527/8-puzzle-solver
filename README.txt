@@ -18,6 +18,9 @@ To solve num_instances randomly generated 8-puzzles using all heuristics and
 plot the results:
     python hw1.py -r num_instances
 
-Additionally, data from the num_instances runs and the algorithm efficiency
-graph are stored in 'sol_depths.pkl', 'num_expanded_dict.pkl', and
-'algorithm_efficiency.png', respectively, in the same directory.
+    Additionally, data from the num_instances runs and the algorithm efficiency
+    graph are stored in 'sol_depths.pkl', 'num_expanded_dict.pkl', and
+    'algorithm_efficiency.png', respectively, in the same directory.
+
+To test the limits of a certain heuristic and get solving time:
+    python hw1.py -t heuristic width
