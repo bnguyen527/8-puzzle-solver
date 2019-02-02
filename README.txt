@@ -18,5 +18,6 @@ To solve num_instances randomly generated 8-puzzles using all heuristics and
 plot the results:
     python hw1.py -r num_instances
 
-Additionally, data from the num_instances runs is stored in 'sol_depths.pkl'
-and 'num_expanded_dict.pkl' in the same directory.
+Additionally, data from the num_instances runs and the algorithm efficiency
+graph are stored in 'sol_depths.pkl', 'num_expanded_dict.pkl', and
+'algorithm_efficiency.png', respectively, in the same directory.
