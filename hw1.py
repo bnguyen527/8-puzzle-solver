@@ -325,7 +325,7 @@ def solve_n_times(width, heuristics, num_instances):
         num_expanded_dict[heuristic.__name__] = []
     for i in range(num_instances):
         print('Instance {}...'.format(i))
-        start_state = Puzzle.generate(3, True)  # Generate a solvable 8-puzzle.
+        start_state = Puzzle.generate(width, True)  # Generate a solvable 8-puzzle.
         solution = None
         for heuristic in heuristics:
             print('Heuristic: {}'.format(heuristic.__name__))
