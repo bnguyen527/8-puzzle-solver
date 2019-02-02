@@ -383,8 +383,8 @@ def main():
         width = int(sys.argv[3])
         print('Testing the limits of {} heuristic at width {}...'.format(heuristic.__name__, width))
         solution, solve_time = test_limits(heuristic, width)
-        print('Solution path depth: {}'.format(len(solution.sol_path)))
-        print('Solving time: {} min'.format(solve_time / 60))
+        print(solution)
+        print('\nSolving time: {} min'.format(solve_time / 60))
     # Mass solving of random puzzles.
     elif sys.argv[1] == '-r' and len(sys.argv) == 3:
         num_instances = int(sys.argv[2])
@@ -402,12 +402,12 @@ def main():
         print(num_expanded_dict)
         print('Plotting results...')
         plot_num_expanded_dict(sol_depths, num_expanded_dict)
-    else:
+    else:   # Solve just 1 puzzle.
         if sys.argv[1] == '-r':  # Solve just 1 random puzzle.
             print('Solving randomly generated 8-puzzle...')
             start_state = Puzzle.generate(3)
             heuristics = [Solver.uniform_cost, Solver.tiles, Solver.manhattan]
-        else:
+        else:   # Solve puzzle from input file.
             # Default heuristic is Manhattan distance.
             if len(sys.argv) < 3 or sys.argv[2] == 'manhattan':
                 heuristics = [Solver.manhattan]
