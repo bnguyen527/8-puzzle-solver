@@ -368,6 +368,7 @@ def main():
         print('Finished solving puzzles!')
         print(sol_depths)
         print(num_expanded_dict)
+        print('Plotting results...')
         plot_num_expanded_dict(sol_depths, num_expanded_dict)
     else:
         if sys.argv[1] == '-r':  # Solve just 1 random puzzle.
